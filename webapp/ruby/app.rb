@@ -110,7 +110,20 @@ SQL
 
   get '/political_parties/:name' do
     votes = 0
-    election_results.each do |r|
+    results = db.xquery(
+      <<~SQL
+        SELECT c.id, c.name, c.political_party, c.sex, v.count
+        FROM candidates AS c
+        LEFT OUTER JOIN (
+          SELECT candidate_id, COUNT(*) AS count
+          FROM votes
+          GROUP BY candidate_id
+        ) AS v ON c.id = v.candidate_id
+        ORDER BY v.count DESC
+      SQL
+    )
+
+    results.each do |r|
       votes += r[:count] || 0 if r[:political_party] == params[:name]
     end
     candidates = db.xquery('SELECT * FROM candidates WHERE political_party = ?', params[:name])
