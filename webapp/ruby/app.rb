@@ -82,7 +82,7 @@ SQL
       candidates.push(r) if i < 10 || 28 < i
     end
 
-    parties_set = db.query('SELECT political_party FROM candidates GROUP BY political_party')
+    parties_set = db.query('SELECT DISTINCT political_party FROM candidates')
     parties = {}
     parties_set.each { |a| parties[a[:political_party]] = 0 }
     results.each do |r|
@@ -102,7 +102,7 @@ SQL
   get '/candidates/:id' do
     candidate = db.xquery('SELECT * FROM candidates WHERE id = ?', params[:id]).first
     return redirect '/' if candidate.nil?
-    votes = db.xquery('SELECT COUNT(*) AS count FROM votes WHERE candidate_id = ?', params[:id]).first[:count]
+    votes = db.xquery('SELECT COUNT(1) AS count FROM votes WHERE candidate_id = ?', params[:id]).first[:count]
     keywords = voice_of_supporter([params[:id]])
     erb :candidate, locals: { candidate: candidate,
                               votes: votes,
