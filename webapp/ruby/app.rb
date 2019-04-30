@@ -154,7 +154,6 @@ SQL
                *([user[:id],
                candidate[:id],
                params[:keyword]] * params[:vote_count].to_i))    
-    end
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
