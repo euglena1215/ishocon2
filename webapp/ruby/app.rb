@@ -109,23 +109,20 @@ SQL
   end
 
   get '/political_parties/:name' do
-    votes = 0
-    results = db.xquery(
+    votes = db.xquery(
       <<~SQL
-        SELECT c.id, c.name, c.political_party, c.sex, v.count
+        SELECT SUM(v.count) AS total_count
         FROM candidates AS c
         LEFT OUTER JOIN (
           SELECT candidate_id, COUNT(*) AS count
           FROM votes
           GROUP BY candidate_id
         ) AS v ON c.id = v.candidate_id
-        ORDER BY v.count DESC
+        WHERE political_party = #{params[:name]}
+        GROUP BY candidate_id
       SQL
-    )
+    ).first[:total_count]
 
-    results.each do |r|
-      votes += r[:count] || 0 if r[:political_party] == params[:name]
-    end
     candidates = db.xquery('SELECT * FROM candidates WHERE political_party = ?', params[:name])
     candidate_ids = candidates.map { |c| c[:id] }
     keywords = voice_of_supporter(candidate_ids)
