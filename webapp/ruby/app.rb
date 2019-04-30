@@ -76,7 +76,8 @@ SQL
 
   get '/' do
     candidates = []
-    election_results.each_with_index do |r, i|
+    results = election_results
+    results.each_with_index do |r, i|
       # 上位10人と最下位のみ表示
       candidates.push(r) if i < 10 || 28 < i
     end
@@ -84,12 +85,12 @@ SQL
     parties_set = db.query('SELECT political_party FROM candidates GROUP BY political_party')
     parties = {}
     parties_set.each { |a| parties[a[:political_party]] = 0 }
-    election_results.each do |r|
+    results.each do |r|
       parties[r[:political_party]] += r[:count] || 0
     end
 
     sex_ratio = { '男': 0, '女': 0 }
-    election_results.each do |r|
+    results.each do |r|
       sex_ratio[r[:sex].to_sym] += r[:count] || 0
     end
 
@@ -159,12 +160,11 @@ SQL
       return erb :vote, locals: { candidates: candidates, message: '投票理由を記入してください' }
     end
 
-    params[:vote_count].to_i.times do
-      result = db.xquery('INSERT INTO votes (user_id, candidate_id, keyword) VALUES (?, ?, ?)',
-                user[:id],
-                candidate[:id],
-                params[:keyword])
-    end
+    db.xquery("INSERT INTO votes (user_id, candidate_id, keyword) 
+               VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
+               *([user[:id],
+               candidate[:id],
+               params[:keyword]] * params[:vote_count].to_i))    
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
