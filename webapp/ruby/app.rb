@@ -149,12 +149,11 @@ SQL
       return erb :vote, locals: { candidates: candidates, message: '投票理由を記入してください' }
     end
 
-    params[:vote_count].to_i.times do
-      result = db.xquery('INSERT INTO votes (user_id, candidate_id, keyword) VALUES (?, ?, ?)',
-                user[:id],
-                candidate[:id],
-                params[:keyword])
-    end
+    db.xquery("INSERT INTO votes (user_id, candidate_id, keyword) 
+               VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
+               *([user[:id],
+               candidate[:id],
+               params[:keyword]] * params[:vote_count].to_i))    
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
