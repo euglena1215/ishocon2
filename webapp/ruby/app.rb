@@ -8,6 +8,11 @@ module Ishocon2
   class PermissionDenied < StandardError; end
 end
 
+$user = db.xquery('SELECT * FROM users WHERE name = ? AND address = ? AND mynumber = ?',
+                  params[:name],
+                  params[:address],
+                  params[:mynumber]).first
+
 class Ishocon2::WebApp < Sinatra::Base
   session_secret = ENV['ISHOCON2_SESSION_SECRET'] || 'showwin_happy'
   use Rack::Session::Cookie, key: 'rack.session', secret: session_secret
@@ -129,10 +134,6 @@ SQL
   end
 
   post '/vote' do
-    user = db.xquery('SELECT * FROM users WHERE name = ? AND address = ? AND mynumber = ?',
-                     params[:name],
-                     params[:address],
-                     params[:mynumber]).first
     candidate = db.xquery('SELECT * FROM candidates WHERE name = ?', params[:candidate]).first
     voted_count =
       user.nil? ? 0 : db.xquery('SELECT COUNT(*) AS count FROM votes WHERE user_id = ?', user[:id]).first[:count]
