@@ -150,10 +150,12 @@ SQL
     end
 
     params[:vote_count].to_i.times do
-      result = db.xquery('INSERT INTO votes (user_id, candidate_id, keyword) VALUES (?, ?, ?)',
-                user[:id],
-                candidate[:id],
-                params[:keyword])
+        result = db.xquery("INSERT INTO votes (user_id, candidate_id, keyword) 
+                           VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
+                           *([user[:id],
+                            candidate[:id],
+                            params[:keyword]] * params[:vote_count].to_i))    
+    end
     end
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
