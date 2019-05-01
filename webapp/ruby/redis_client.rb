@@ -15,7 +15,13 @@ class RedisClient
 
     def get_vote_count_by_candidate(candidate_id)
       keys = @@redis.keys(key_votes('*', candidate_id, '*'))
-      return if keys.empty?
+      return 0 if keys.empty?
+      @@redis.mget(*keys).map(&:to_i).sum
+    end
+
+    def get_vote_count_by_user(user_id)
+      keys = @@redis.keys(key_votes(user_id, '*', '*'))
+      return 0 if keys.empty?
       @@redis.mget(*keys).map(&:to_i).sum
     end
 

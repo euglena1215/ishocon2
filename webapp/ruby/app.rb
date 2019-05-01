@@ -141,7 +141,7 @@ SQL
                      params[:mynumber]).first
     candidate = db.xquery('SELECT * FROM candidates WHERE name = ?', params[:candidate]).first
     voted_count =
-      user.nil? ? 0 : db.xquery('SELECT COUNT(*) AS count FROM votes WHERE user_id = ?', user[:id]).first[:count]
+      user.nil? ? 0 : RedisClient.get_vote_count_by_user(user[:id])
 
     candidates = db.query('SELECT * FROM candidates')
     if user.nil?
