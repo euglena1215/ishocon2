@@ -43,6 +43,7 @@ class RedisClient
 
     def get_keyword_sorted_votes_count_by_candidates(candidate_id)
       @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10])
+    end
     
     private
 
