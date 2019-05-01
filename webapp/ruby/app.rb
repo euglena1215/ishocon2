@@ -73,6 +73,7 @@ SQL
 
     def db_initialize
       db.query('DELETE FROM votes')
+      RedisClient.reset_vote
     end
   end
 
@@ -104,7 +105,7 @@ SQL
   get '/candidates/:id' do
     candidate = db.xquery('SELECT * FROM candidates WHERE id = ?', params[:id]).first
     return redirect '/' if candidate.nil?
-    votes = db.xquery('SELECT COUNT(1) AS count FROM votes WHERE candidate_id = ?', params[:id]).first[:count]
+    votes = RedisClient.get_vote_count_by_candidate(params[:id])
     keywords = voice_of_supporter([params[:id]])
     erb :candidate, locals: { candidate: candidate,
                               votes: votes,
@@ -164,7 +165,8 @@ SQL
                VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
                *([user[:id],
                candidate[:id],
-               params[:keyword]] * params[:vote_count].to_i))    
+               params[:keyword]] * params[:vote_count].to_i))
+    RedisClient.incr_vote(params[:vote_count].to_i, user[:id], candidate[:id], params[:keyword])
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
