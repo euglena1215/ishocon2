@@ -32,6 +32,8 @@ class RedisClient
       '一番最初に目に入った名前だったから' => 24
     }
 
+    VOTE_KEYWORD_REMAPPING = VOTE_KEYWORD_MAPPING.map {|keyword, number| [number, keyword]}.to_h
+
     def incr_vote(count, user_id, candidate_id, keyword)
       @@redis.incrby(key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword)), count)
     end
@@ -69,9 +71,10 @@ class RedisClient
     end
 
     def get_keyword_sorted_votes_count_by_candidates(candidate_id)
-      @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10])
+      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10])
+      mapped_numbers.map { |num| key_votes_keyword_remapping(num) }
     end
-    
+
     private
 
     def key_votes(user_id, candidate_id, keyword)
@@ -85,6 +88,11 @@ class RedisClient
     def key_votes_keyword_mapping(keyword)
       raise keyword unless VOTE_KEYWORD_MAPPING.include?(keyword)
       VOTE_KEYWORD_MAPPING[keyword]
+    end
+
+    def key_votes_keyword_remapping(mapped_number)
+      raise mapped_number unless VOTE_KEYWORD_REMAPPING.include?(mapped_number)
+      VOTE_KEYWORD_REMAPPING[mapped_number]
     end
   end
 end
