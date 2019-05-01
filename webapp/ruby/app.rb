@@ -105,7 +105,7 @@ SQL
     candidate = db.xquery('SELECT * FROM candidates WHERE id = ?', params[:id]).first
     return redirect '/' if candidate.nil?
     votes = RedisClient.get_vote_count_by_candidate(params[:id])
-    keywords = voice_of_supporter([params[:id]])
+    keywords = RedisClient.get_keyword_sorted_votes_count_by_candidates(params[:id])
     erb :candidate, locals: { candidate: candidate,
                               votes: votes,
                               keywords: keywords }
@@ -162,6 +162,7 @@ SQL
                candidate[:id],
                params[:keyword]] * params[:vote_count].to_i))
     RedisClient.incr_vote(params[:vote_count].to_i, user[:id], candidate[:id], params[:keyword])
+    RedisClient.incr_votes_group_by_keyword(candidate[:id], params[:vote_count].to_i, params[:keyword])
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
