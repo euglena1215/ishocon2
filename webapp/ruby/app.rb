@@ -113,16 +113,12 @@ SQL
 
   get '/political_parties/:name' do
     query = <<~SQL
-      SELECT SUM(v.count) AS total_count
+      SELECT id
       FROM candidates AS c
-      LEFT OUTER JOIN (
-        SELECT candidate_id, COUNT(*) AS count
-        FROM votes
-        GROUP BY candidate_id
-      ) AS v ON c.id = v.candidate_id
       WHERE political_party = ?
     SQL
-    votes = db.xquery(query, params[:name]).first[:total_count]
+    candidate_ids = db.xquery(query, params[:name]).map { |row| row[:id] }
+    votes = candidate_ids.map {|id| RedisClient.get_vote_count_by_candidate(id)}.compact.sum
 
     candidates = db.xquery('SELECT * FROM candidates WHERE political_party = ?', params[:name])
     candidate_ids = candidates.map { |c| c[:id] }
