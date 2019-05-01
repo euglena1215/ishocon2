@@ -6,7 +6,7 @@ class RedisClient
   class << self
 
     def incr_vote(count, user_id, candidate_id, keyword)
-      @@redis.incrby(count, key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword)))
+      @@redis.incrby(key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword)), count)
     end
 
     def get_vote(user_id, candidate_id, keyword)
