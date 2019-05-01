@@ -3,6 +3,8 @@ require 'mysql2'
 require 'mysql2-cs-bind'
 require 'erubis'
 
+require '/home/ishocon/webapp/ruby/redis_client.rb'
+
 module Ishocon2
   class AuthenticationError < StandardError; end
   class PermissionDenied < StandardError; end
