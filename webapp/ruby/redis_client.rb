@@ -31,10 +31,27 @@ class RedisClient
       @@redis.del(*keys)
     end
 
+    def incr_votes_group_by_keyword(candidate_id, count, keyword)
+      @@redis.zincrby(key_votes_group_by_keyword(candidate_id), count * (-1), key_votes_keyword_mapping(keyword))
+    end
+
+    def reset_votes_group_by_keyword
+      keys = @@redis.keys("isu:votes_group_by_keyword:*")
+      return if keys.empty?
+      @@redis.del(*keys)
+    end
+
+    def get_keyword_sorted_votes_count_by_candidates(candidate_id)
+      @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10])
+    
     private
 
     def key_votes(user_id, candidate_id, keyword)
       "isu:votes:#{user_id}:#{candidate_id}:#{keyword}"
+    end
+
+    def key_votes_group_by_keyword(candidate_id)
+      "isu:votes_group_by_keyword:#{candidate_id}"
     end
 
     def key_votes_keyword_mapping(keyword)
