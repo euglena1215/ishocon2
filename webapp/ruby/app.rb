@@ -105,7 +105,7 @@ SQL
   get '/candidates/:id' do
     candidate = db.xquery('SELECT * FROM candidates WHERE id = ?', params[:id]).first
     return redirect '/' if candidate.nil?
-    votes = db.xquery('SELECT COUNT(1) AS count FROM votes WHERE candidate_id = ?', params[:id]).first[:count]
+    votes = RedisClient.get_vote_count_by_candidate(params[:id])
     keywords = voice_of_supporter([params[:id]])
     erb :candidate, locals: { candidate: candidate,
                               votes: votes,
