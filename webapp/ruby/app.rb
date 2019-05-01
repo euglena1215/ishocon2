@@ -46,17 +46,16 @@ class Ishocon2::WebApp < Sinatra::Base
     end
 
     def election_results
-      query = <<SQL
-SELECT c.id, c.name, c.political_party, c.sex, v.count
-FROM candidates AS c
-LEFT OUTER JOIN
-  (SELECT candidate_id, COUNT(*) AS count
-  FROM votes
-  GROUP BY candidate_id) AS v
-ON c.id = v.candidate_id
-ORDER BY v.count DESC
-SQL
-      db.xquery(query)
+      query = <<~SQL
+        SELECT c.id, c.name, c.political_party, c.sex
+        FROM candidates AS c
+      SQL
+      results = db.xquery(query)
+      results.each do |row|
+        row[:count] = RedisClient.get_vote_count_by_candidate(row[:id])
+      end
+
+      results.to_a.sort {|a,b| (b[:count] || 0) <=> (a[:count] || 0) }
     end
 
     def voice_of_supporter(candidate_ids)
