@@ -158,11 +158,6 @@ SQL
       return erb :vote, locals: { candidates: candidates, message: '投票理由を記入してください' }
     end
 
-    db.xquery("INSERT INTO votes (user_id, candidate_id, keyword) 
-               VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
-               *([user[:id],
-               candidate[:id],
-               params[:keyword]] * params[:vote_count].to_i))
     RedisClient.incr_vote(params[:vote_count].to_i, user[:id], candidate[:id], params[:keyword])
     RedisClient.incr_votes_group_by_keyword_candidate_id(candidate[:id], params[:vote_count].to_i, params[:keyword])
     RedisClient.incr_votes_group_by_keyword_political_party(candidate[:political_party], params[:vote_count].to_i, params[:keyword])
