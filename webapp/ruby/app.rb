@@ -118,7 +118,7 @@ SQL
       WHERE political_party = ?
     SQL
     candidate_ids = db.xquery(query, params[:name]).map { |row| row[:id] }
-    votes = candidate_ids.map {|id| RedisClient.get_vote_count_by_candidate(id)}.sum
+    votes = candidate_ids.map {|id| RedisClient.get_vote_count_by_candidate(id)}.compact.sum
 
     candidates = db.xquery('SELECT * FROM candidates WHERE political_party = ?', params[:name])
     candidate_ids = candidates.map { |c| c[:id] }
