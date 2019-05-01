@@ -55,7 +55,7 @@ class Ishocon2::WebApp < Sinatra::Base
         row[:count] = RedisClient.get_vote_count_by_candidate(row[:id])
       end
 
-      results.sort {|a,b| b[:count] <=> a[:count] }
+      results.to_a.sort {|a,b| b[:count] <=> a[:count] }
     end
 
     def voice_of_supporter(candidate_ids)
