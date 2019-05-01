@@ -73,6 +73,7 @@ SQL
 
     def db_initialize
       db.query('DELETE FROM votes')
+      RedisClient.reset_vote
     end
   end
 
@@ -164,7 +165,8 @@ SQL
                VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
                *([user[:id],
                candidate[:id],
-               params[:keyword]] * params[:vote_count].to_i))    
+               params[:keyword]] * params[:vote_count].to_i))
+    RedisClient.incr_vote(user[:id], candidate[:id], params[:keyword])
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
