@@ -122,6 +122,7 @@ class RedisClient
       else
         raise political_party
       end
+    end
     
     def key_votes_keyword_remapping(mapped_number)
       raise mapped_number unless VOTE_KEYWORD_REMAPPING.include?(mapped_number)
