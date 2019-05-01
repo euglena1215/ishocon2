@@ -5,8 +5,8 @@ class RedisClient
   @@redis = (Thread.current[:isu_redis] ||= Redis.new(host: '127.0.0.1', port: 6379))
   class << self
 
-    def incr_vote(user_id, candidate_id, keyword)
-      @@redis.incr(key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword)))
+    def incr_vote(count, user_id, candidate_id, keyword)
+      @@redis.incrby(count, key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword)))
     end
 
     def get_vote(user_id, candidate_id, keyword)

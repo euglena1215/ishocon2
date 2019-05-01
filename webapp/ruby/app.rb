@@ -166,7 +166,7 @@ SQL
                *([user[:id],
                candidate[:id],
                params[:keyword]] * params[:vote_count].to_i))
-    RedisClient.incr_vote(user[:id], candidate[:id], params[:keyword])
+    RedisClient.incr_vote(params[:vote_count].to_i, user[:id], candidate[:id], params[:keyword])
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 
