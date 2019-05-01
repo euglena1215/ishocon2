@@ -71,7 +71,8 @@ class RedisClient
     end
 
     def get_keyword_sorted_votes_count_by_candidates(candidate_id)
-      @@redis.zrangebyscore(key_votes_group_by_keyword_candidate_id(candidate_id), "-inf", 0, limit: [0, 10])
+      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10]).map(&:to_i)
+      mapped_numbers.map { |num| key_votes_keyword_remapping(num) }
     end
 
     def incr_votes_group_by_keyword_political_party(political_party, count, keyword)
@@ -85,7 +86,7 @@ class RedisClient
     end
 
     def get_keyword_sorted_votes_count_by_political_parties(political_party)
-      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10]).map(&:to_i)
+      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword_political_party(key_votes_political_party_mapping(political_party)), "-inf", 0, limit: [0, 10]).map(&:to_i)
       mapped_numbers.map { |num| key_votes_keyword_remapping(num) }
     end
 
