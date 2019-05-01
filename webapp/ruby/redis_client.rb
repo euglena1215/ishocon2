@@ -6,11 +6,12 @@ class RedisClient
   class << self
 
     def incr_vote(user_id, candidate_id, keyword)
-      @@redis.incr(key_votes(user_id, candidate_id, keyword))
+      @@redis.incr(key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword)))
     end
 
     def get_vote(user_id, candidate_id, keyword)
-      @@redis.get(key_votes(user_id, candidate_id, keyword)).to_i
+      @@redis.get(key_votes(user_id, candidate_id, key_votes_keyword_mapping(keyword))).to_i
+    end
     end
 
     def reset_vote
@@ -22,7 +23,7 @@ class RedisClient
     private
 
     def key_votes(user_id, candidate_id, keyword)
-      "isu:votes:#{user_id}:#{candidate_id}:#{key_votes_keyword_mapping(keyword)}"
+      "isu:votes:#{user_id}:#{candidate_id}:#{keyword}"
     end
 
     def key_votes_keyword_mapping(keyword)
