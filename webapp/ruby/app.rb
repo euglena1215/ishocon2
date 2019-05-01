@@ -73,6 +73,8 @@ SQL
     def db_initialize
       db.query('DELETE FROM votes')
       RedisClient.reset_vote
+      RedisClient.reset_votes_group_by_keyword_candidate_id
+      RedisClient.reset_votes_group_by_keyword_political_party
     end
   end
 
@@ -122,7 +124,7 @@ SQL
 
     candidates = db.xquery('SELECT * FROM candidates WHERE political_party = ?', params[:name])
     candidate_ids = candidates.map { |c| c[:id] }
-    keywords = voice_of_supporter(candidate_ids)
+    keywords = RedisClient.get_keyword_sorted_votes_count_by_political_parties(params[:name])
     erb :political_party, locals: { political_party: params[:name],
                                     votes: votes,
                                     candidates: candidates,
@@ -156,13 +158,9 @@ SQL
       return erb :vote, locals: { candidates: candidates, message: '投票理由を記入してください' }
     end
 
-    db.xquery("INSERT INTO votes (user_id, candidate_id, keyword) 
-               VALUES #{(['(?, ?, ?)'] * params[:vote_count].to_i).join(',')}",
-               *([user[:id],
-               candidate[:id],
-               params[:keyword]] * params[:vote_count].to_i))
     RedisClient.incr_vote(params[:vote_count].to_i, user[:id], candidate[:id], params[:keyword])
-    RedisClient.incr_votes_group_by_keyword(candidate[:id], params[:vote_count].to_i, params[:keyword])
+    RedisClient.incr_votes_group_by_keyword_candidate_id(candidate[:id], params[:vote_count].to_i, params[:keyword])
+    RedisClient.incr_votes_group_by_keyword_political_party(candidate[:political_party], params[:vote_count].to_i, params[:keyword])
     return erb :vote, locals: { candidates: candidates, message: '投票に成功しました' }
   end
 

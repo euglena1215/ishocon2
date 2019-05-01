@@ -60,18 +60,33 @@ class RedisClient
       @@redis.del(*keys)
     end
 
-    def incr_votes_group_by_keyword(candidate_id, count, keyword)
-      @@redis.zincrby(key_votes_group_by_keyword(candidate_id), count * (-1), key_votes_keyword_mapping(keyword))
+    def incr_votes_group_by_keyword_candidate_id(candidate_id, count, keyword)
+      @@redis.zincrby(key_votes_group_by_keyword_candidate_id(candidate_id), count * (-1), key_votes_keyword_mapping(keyword))
     end
 
-    def reset_votes_group_by_keyword
-      keys = @@redis.keys("isu:votes_group_by_keyword:*")
+    def reset_votes_group_by_keyword_candidate_id
+      keys = @@redis.keys("isu:votes_group_by_keyword_candidate_id:*")
       return if keys.empty?
       @@redis.del(*keys)
     end
 
     def get_keyword_sorted_votes_count_by_candidates(candidate_id)
-      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword(candidate_id), "-inf", 0, limit: [0, 10]).map(&:to_i)
+      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword_candidate_id(candidate_id), "-inf", 0, limit: [0, 10]).map(&:to_i)
+      mapped_numbers.map { |num| key_votes_keyword_remapping(num) }
+    end
+
+    def incr_votes_group_by_keyword_political_party(political_party, count, keyword)
+      @@redis.zincrby(key_votes_group_by_keyword_political_party(key_votes_political_party_mapping(political_party)), count * (-1), key_votes_keyword_mapping(keyword))
+    end
+
+    def reset_votes_group_by_keyword_political_party
+      keys = @@redis.keys("isu:votes_group_by_keyword_political_party:*")
+      return if keys.empty?
+      @@redis.del(*keys)
+    end
+
+    def get_keyword_sorted_votes_count_by_political_parties(political_party)
+      mapped_numbers = @@redis.zrangebyscore(key_votes_group_by_keyword_political_party(key_votes_political_party_mapping(political_party)), "-inf", 0, limit: [0, 10]).map(&:to_i)
       mapped_numbers.map { |num| key_votes_keyword_remapping(num) }
     end
 
@@ -81,8 +96,12 @@ class RedisClient
       "isu:votes:#{user_id}:#{candidate_id}:#{keyword}"
     end
 
-    def key_votes_group_by_keyword(candidate_id)
-      "isu:votes_group_by_keyword:#{candidate_id}"
+    def key_votes_group_by_keyword_candidate_id(candidate_id)
+      "isu:votes_group_by_keyword_candidate_id:#{candidate_id}"
+    end
+
+    def key_votes_group_by_keyword_political_party(political_party)
+      "isu:votes_group_by_keyword_political_party:#{political_party}"
     end
 
     def key_votes_keyword_mapping(keyword)
@@ -90,6 +109,21 @@ class RedisClient
       VOTE_KEYWORD_MAPPING[keyword]
     end
 
+    def key_votes_political_party_mapping(political_party)
+      case political_party
+      when '夢実現党'
+        1
+      when '国民10人大活躍党'
+        2 
+      when '国民元気党'
+        3 
+      when '国民平和党'
+        4 
+      else
+        raise political_party
+      end
+    end
+    
     def key_votes_keyword_remapping(mapped_number)
       raise mapped_number unless VOTE_KEYWORD_REMAPPING.include?(mapped_number)
       VOTE_KEYWORD_REMAPPING[mapped_number]
