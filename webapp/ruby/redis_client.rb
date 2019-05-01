@@ -15,6 +15,7 @@ class RedisClient
 
     def reset_vote
       keys = @@redis.keys("isu:votes:*")
+      return if keys.empty?
       @@redis.del(*keys)
     end
 
