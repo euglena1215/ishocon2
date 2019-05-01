@@ -119,7 +119,6 @@ SQL
         GROUP BY candidate_id
       ) AS v ON c.id = v.candidate_id
       WHERE political_party = ?
-      GROUP BY candidate_id
     SQL
     votes = db.xquery(query, params[:name]).first[:total_count]
 
